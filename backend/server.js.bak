@@ -1,0 +1,45 @@
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import OpenAI from "openai";
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// ✅ Root route check
+app.get("/", (req, res) => {
+  res.send("✅ Server is running!");
+});
+
+// ✅ Chat route
+app.post("/chat", async (req, res) => {
+  try {
+    const userMessage = req.body.message;
+    if (!userMessage) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const response = await client.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: userMessage }],
+    });
+
+    const botReply = response.choices[0].message.content;
+    res.json({ reply: botReply });
+  } catch (error) {
+    console.error("Chat error:", error);
+    res.status(500).json({ error: "Something went wrong!" });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
