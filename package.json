@@ -1,0 +1,13 @@
+{
+    "name": "jarvis-hologram-control",
+    "version": "1.0.0",
+    "description": "Full Stack J.A.R.V.I.S Interface",
+    "scripts": {
+        "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+        "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+        "start": "npm run dev"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
