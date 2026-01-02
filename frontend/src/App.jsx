@@ -352,6 +352,10 @@ function App() {
             <HandController
                 onGesture={handleGesture}
                 cameraEnabled={cameraEnabled}
+                onError={(err) => {
+                    addLog("CAMERA ERROR: Access Denied or Missing");
+                    setCameraEnabled(false);
+                }}
             />
             <VoiceController
                 ref={voiceControllerRef} // Expose methods
