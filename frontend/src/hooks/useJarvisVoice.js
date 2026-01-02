@@ -31,6 +31,9 @@ export default function useJarvisVoice() {
     const speak = useCallback((text) => {
         if (!synth) return;
 
+        // Ensure not paused
+        if (synth.paused) synth.resume();
+
         // Cancel previous if any (to prevent queue buildup)
         synth.cancel();
 
@@ -45,12 +48,21 @@ export default function useJarvisVoice() {
         }
 
         // Jarvis Profile Tuning
-        utterance.pitch = 0.9; // Slightly deeper
-        utterance.rate = 1.1; // Efficient, fast
+        utterance.pitch = 0.9;
+        utterance.rate = 1.0; // Slightly slower for clarity
         utterance.volume = 1;
 
         synth.speak(utterance);
     }, []);
 
-    return { speak, voiceName: jarvisVoice.current?.name };
+    // Unlock function to be called on user click
+    const wake = useCallback(() => {
+        if (!synth) return;
+        if (synth.paused) synth.resume();
+        const empty = new SpeechSynthesisUtterance('');
+        empty.volume = 0;
+        synth.speak(empty);
+    }, []);
+
+    return { speak, wake, voiceName: jarvisVoice.current?.name };
 }
