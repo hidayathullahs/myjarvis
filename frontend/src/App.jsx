@@ -214,7 +214,6 @@ function App() {
 
     // --- NEW FEATURES ---
     const telemetry = useTelemetry();
-    const telemetry = useTelemetry();
     const { speak: rawSpeak } = useJarvisVoice();
 
     // Debug Wrapper for Speak
