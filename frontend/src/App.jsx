@@ -224,25 +224,6 @@ function App() {
     const [config, setConfig] = useState({ vision: true, voice: true, gestures: true }); // Plugin System
     const [isStarted, setIsStarted] = useState(false); // Startup State
 
-    // Startup Greeting - REFACTORED
-    const playIntro = () => {
-        // Try to play the user's specific audio file
-        const audio = new Audio('/jarvis_intro.mp3');
-        audio.volume = 1.0;
-
-        const playPromise = audio.play();
-
-        if (playPromise !== undefined) {
-            playPromise.then(_ => {
-                addLog("AUDIO: PLAYING INTRO SEQUENCE");
-            })
-                .catch(error => {
-                    console.error("Audio Playback Error:", error);
-                    addLog("AUDIO: PLAYBACK FAILED (Check Permissions)");
-                });
-        }
-    };
-
     const checkBackendHealth = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/health`);
@@ -260,7 +241,7 @@ function App() {
     const handleStart = () => {
         setIsStarted(true);
         wake(); // Unlock Speech Synthesis
-        playIntro();
+        // playIntro(); // Intro removed
         checkBackendHealth();
         addLog("SYSTEM: INITIALIZED");
         speak("System online.");
