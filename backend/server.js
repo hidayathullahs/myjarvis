@@ -22,15 +22,22 @@ app.get('/api/health', (req, res) => res.json({ status: 'online' }));
 // Endpoint: Frontend calls this, NOT Google directly
 app.post('/api/jarvis-command', async (req, res) => {
     try {
-        const { prompt, image } = req.body;
+        const { prompt, image, history } = req.body;
 
-        console.log(`[Backend] Received command: ${prompt?.substring(0, 50)}...`);
+        console.log(`[Backend] Received command: ${prompt?.substring(0, 50)}... [History Depth: ${history?.length || 0}]`);
 
-        const payload = {
-            contents: [{
-                parts: [{ text: prompt }]
-            }]
-        };
+        // Construct Conversation History
+        let contents = [];
+
+        if (history && Array.isArray(history)) {
+            contents = history.map(turn => ({
+                role: turn.role,
+                parts: [{ text: turn.text }]
+            }));
+        }
+
+        // Construct Current Turn
+        const currentParts = [{ text: prompt }];
 
         // Add image if present
         if (image) {
@@ -39,13 +46,20 @@ app.post('/api/jarvis-command', async (req, res) => {
             // If image comes as "data:image/png;base64,..." we strip metadata.
             const base64Data = image.split(',')[1] || image;
 
-            payload.contents[0].parts.push({
+            currentParts.push({
                 inlineData: {
                     mimeType: "image/png",
                     data: base64Data
                 }
             });
         }
+
+        contents.push({
+            role: "user",
+            parts: currentParts
+        });
+
+        const payload = { contents };
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
@@ -86,10 +100,11 @@ app.post('/api/jarvis-command', async (req, res) => {
         If no action is needed, set "action": null.
         `;
 
-        // Prepend system instruction to the text prompt
-        // Note: Gemini 1.5 Flash supports system instructions but for simplicity we append to prompt here for 1.0/1.5 compatibility
-        if (payload.contents[0].parts.length > 0) {
-            payload.contents[0].parts[0].text = `${systemInstruction}\n\nUser: ${payload.contents[0].parts[0].text}`;
+        // Prepend system instruction to the FIRST message in the conversation
+        // This ensures context is established regardless of history length
+        if (payload.contents.length > 0) {
+            const firstPart = payload.contents[0].parts[0];
+            firstPart.text = `${systemInstruction}\n\n[BEGIN CONVERSATION]\n${firstPart.text}`;
         }
 
         // Model Fallback Strategy

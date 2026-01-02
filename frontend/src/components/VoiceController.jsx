@@ -123,15 +123,21 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
 
 
 
+    const [history, setHistory] = useState([]);
+
+    // ... (rest of imports)
+
     const askBackend = async (prompt, image) => {
         setIsThinking(true);
         try {
+            // Prepare payload with history
             const response = await fetch(`${API_BASE_URL}/api/jarvis-command`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: prompt,
-                    image: image // Send the base64 image
+                    image: image, // Send the base64 image
+                    history: history // Send previous context
                 })
             });
 
@@ -147,6 +153,16 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
 
             addLog(`AI: ${text}`);
             if (speak) speak(text);
+
+            // Update History (Limit to last 10 turns to avoid token overflow)
+            setHistory(prev => {
+                const newHistory = [
+                    ...prev,
+                    { role: 'user', text: prompt },
+                    { role: 'model', text: text }
+                ];
+                return newHistory.slice(-10); // Keep last 10 turns
+            });
 
             if (action) {
                 setTimeout(() => {
