@@ -389,7 +389,6 @@ function App() {
                     theme={theme}
                     handCount={handCount}
                     telemetry={telemetry}
-                    onPlayIntro={playIntro}
                 />
             </div>
         </div>
