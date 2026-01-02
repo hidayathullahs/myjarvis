@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-export default function HandController({ onGesture, cameraEnabled = true }) {
+export default function HandController({ onGesture, cameraEnabled = true, onError }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const handLandmarkerRef = useRef(null);
@@ -80,6 +80,7 @@ export default function HandController({ onGesture, cameraEnabled = true }) {
             videoRef.current.onloadeddata = predictWebcam;
         } catch (err) {
             console.error("Camera error:", err);
+            if (onError) onError(err);
         }
     };
 
@@ -183,6 +184,8 @@ export default function HandController({ onGesture, cameraEnabled = true }) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
+
+    if (!cameraEnabled) return null;
 
     return (
         <div className="absolute top-4 right-4 w-64 h-48 border border-jarvis-blue bg-black/50 overflow-hidden rounded-lg z-50 opacity-80 hover:opacity-100 transition-opacity">
