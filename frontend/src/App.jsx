@@ -214,7 +214,7 @@ function App() {
 
     // --- NEW FEATURES ---
     const telemetry = useTelemetry();
-    const { speak: rawSpeak } = useJarvisVoice();
+    const { speak: rawSpeak, wake } = useJarvisVoice();
 
     // Debug Wrapper for Speak
     const speak = (text) => {
@@ -259,9 +259,11 @@ function App() {
 
     const handleStart = () => {
         setIsStarted(true);
+        wake(); // Unlock Speech Synthesis
         playIntro();
         checkBackendHealth();
         addLog("SYSTEM: INITIALIZED");
+        speak("System online.");
     };
 
     // removed simple useEffect to prevent autoplay error
