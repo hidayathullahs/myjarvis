@@ -1,4 +1,5 @@
 import React, { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
+import { API_BASE_URL } from '../config';
 
 // Initialize Voice Controller
 const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImage, speak }, ref) => {
@@ -120,10 +121,12 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
         };
     }, []);
 
+
+
     const askBackend = async (prompt, image) => {
         setIsThinking(true);
         try {
-            const response = await fetch('http://localhost:3000/api/jarvis-command', {
+            const response = await fetch(`${API_BASE_URL}/api/jarvis-command`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

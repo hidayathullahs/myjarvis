@@ -5,6 +5,8 @@ import VoiceController from './components/VoiceController';
 import HUD from './components/HUD';
 import useTelemetry from './hooks/useTelemetry';
 import useJarvisVoice from './hooks/useJarvisVoice';
+import { API_BASE_URL } from './config';
+
 
 function App() {
     const [gesture, setGesture] = useState('Idle');
@@ -214,6 +216,7 @@ function App() {
     const telemetry = useTelemetry();
     const { speak } = useJarvisVoice();
     const [config, setConfig] = useState({ vision: true, voice: true, gestures: true }); // Plugin System
+    const [isStarted, setIsStarted] = useState(false); // Startup State
 
     // Startup Greeting - REFACTORED
     const playIntro = () => {
@@ -229,18 +232,14 @@ function App() {
             })
                 .catch(error => {
                     console.error("Audio Playback Error:", error);
-                    if (error.name === 'NotAllowedError') {
-                        addLog("SYSTEM: CLICK EXTENSIONS > REPLAY INTRO");
-                    } else {
-                        addLog("AUDIO: FILE NOT FOUND");
-                    }
+                    addLog("AUDIO: PLAYBACK FAILED (Check Permissions)");
                 });
         }
     };
 
     const checkBackendHealth = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/health');
+            const res = await fetch(`${API_BASE_URL}/api/health`);
             if (res.ok) {
                 addLog("SERVER: CONNECTED");
             } else {
@@ -248,13 +247,22 @@ function App() {
             }
         } catch (e) {
             addLog("SERVER: OFFLINE (Check Terminal)");
+            speak("Warning. Server connection failed.");
         }
     };
 
-    useEffect(() => {
+    const handleStart = () => {
+        setIsStarted(true);
         playIntro();
         checkBackendHealth();
-    }, []);
+        addLog("SYSTEM: INITIALIZED");
+    };
+
+    // removed simple useEffect to prevent autoplay error
+    // useEffect(() => {
+    //     playIntro();
+    //     checkBackendHealth();
+    // }, []);
 
     const handleVoiceCommand = (command) => {
         addLog(`VOICE: "${command}"`);
@@ -323,6 +331,14 @@ function App() {
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
         >
+            {/* Startup Overlay */}
+            {!isStarted && (
+                <div className="startup-overlay">
+                    <button className="arc-reactor-btn" onClick={handleStart}></button>
+                    <div className="absolute mt-48 text-cyan-400 animate-pulse">CLICK REACTOR TO INITIALIZE</div>
+                </div>
+            )}
+
             {/* 3D Background */}
             <div className="absolute inset-0 z-0">
                 <Scene rotation={rotation} zoom={zoom} modelUrl={modelUrl} onCanvasReady={(canvas) => canvasRef.current = canvas} />
@@ -365,7 +381,7 @@ function App() {
             />
 
             {/* UI Overlay */}
-            <div className="absolute inset-0 z-20 pointer-events-none">
+            <div className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-1000 ${isStarted ? 'opacity-100' : 'opacity-0'}`}>
                 <HUD
                     logs={logs}
                     gesture={gesture}
