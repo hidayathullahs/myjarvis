@@ -214,7 +214,14 @@ function App() {
 
     // --- NEW FEATURES ---
     const telemetry = useTelemetry();
-    const { speak } = useJarvisVoice();
+    const telemetry = useTelemetry();
+    const { speak: rawSpeak } = useJarvisVoice();
+
+    // Debug Wrapper for Speak
+    const speak = (text) => {
+        addLog(`AUDIO OUTPUT: "${text}"`);
+        rawSpeak(text);
+    };
     const [config, setConfig] = useState({ vision: true, voice: true, gestures: true }); // Plugin System
     const [isStarted, setIsStarted] = useState(false); // Startup State
 
