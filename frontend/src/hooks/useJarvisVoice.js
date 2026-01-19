@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export default function useJarvisVoice() {
-    const [voices, setVoices] = useState([]);
+export function useJarvisVoice() {
+    // const [voices, setVoices] = useState([]); // Unused
     const jarvisVoice = useRef(null);
     const synth = window.speechSynthesis;
 
     useEffect(() => {
         const loadVoices = () => {
             const available = synth.getVoices();
-            setVoices(available);
+            // setVoices(available);
 
             // Priority Logic for Jarvis-like voices
             // 1. Google UK English Male (Chrome)
@@ -26,7 +26,7 @@ export default function useJarvisVoice() {
         if (synth.onvoiceschanged !== undefined) {
             synth.onvoiceschanged = loadVoices;
         }
-    }, []);
+    }, [synth]);
 
     const speak = useCallback((text) => {
         if (!synth) return;
@@ -53,7 +53,7 @@ export default function useJarvisVoice() {
         utterance.volume = 1;
 
         synth.speak(utterance);
-    }, []);
+    }, [synth]);
 
     // Unlock function to be called on user click
     const wake = useCallback(() => {
@@ -62,7 +62,7 @@ export default function useJarvisVoice() {
         const empty = new SpeechSynthesisUtterance('');
         empty.volume = 0;
         synth.speak(empty);
-    }, []);
+    }, [synth]);
 
     return { speak, wake, voiceName: jarvisVoice.current?.name };
 }

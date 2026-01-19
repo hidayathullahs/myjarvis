@@ -11,6 +11,12 @@ if (!global.fetch) {
 }
 
 const app = express();
+const http = require('http');
+const server = http.createServer(app); // Wrap Express
+const sessionManager = require('./sessionManager'); // Phase 8: Collaboration
+
+sessionManager.init(server); // Initialize Socket.io
+
 const PORT = process.env.PORT || 3000;
 
 app.use(cors()); // Allow frontend to connect
@@ -205,4 +211,5 @@ app.post('/api/jarvis-command', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`J.A.R.V.I.S. Backend running on port ${PORT}`));
+// Use server.listen instead of app.listen to enable WebSockets
+server.listen(PORT, () => console.log(`J.A.R.V.I.S. Backend running on port ${PORT} [Collaboration Active]`));

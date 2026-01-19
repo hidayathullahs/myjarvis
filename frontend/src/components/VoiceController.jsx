@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../config';
 const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImage, speak }, ref) => {
     const recognitionRef = useRef(null);
     const [isThinking, setIsThinking] = useState(false);
+    const [isListening, setIsListening] = useState(false);
 
     // Expose method to parent via ref
     useImperativeHandle(ref, () => ({
@@ -54,11 +55,13 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
 
             recognition.onstart = () => {
                 onStatusChange(true);
+                setIsListening(true);
                 addLog("Voice System: Activated");
             };
 
             recognition.onend = () => {
                 onStatusChange(false);
+                setIsListening(false);
                 // Attempt restart if not intentionally stopped
                 // Use a small timeout to prevent rapid-fire loops if permission denied
                 setTimeout(() => {
@@ -123,7 +126,7 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
 
 
 
-    const [history, setHistory] = useState([]);
+    const historyRef = useRef([]);
 
     // ... (rest of imports)
 
@@ -137,7 +140,7 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
                 body: JSON.stringify({
                     prompt: prompt,
                     image: image, // Send the base64 image
-                    history: history // Send previous context
+                    history: historyRef.current // Send previous context from Ref
                 })
             });
 
@@ -155,14 +158,12 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
             if (speak) speak(text);
 
             // Update History (Limit to last 10 turns to avoid token overflow)
-            setHistory(prev => {
-                const newHistory = [
-                    ...prev,
-                    { role: 'user', text: prompt },
-                    { role: 'model', text: text }
-                ];
-                return newHistory.slice(-10); // Keep last 10 turns
-            });
+            const newHistory = [
+                ...historyRef.current,
+                { role: 'user', text: prompt },
+                { role: 'model', text: text }
+            ];
+            historyRef.current = newHistory.slice(-10); // Keep last 10 turns
 
             if (action) {
                 setTimeout(() => {
@@ -182,7 +183,36 @@ const VoiceController = forwardRef(({ onCommand, onStatusChange, addLog, getImag
 
     // const speak = (text) => { ... } // Removed in favor of prop
 
-    return null;
+    // Visual Feedback
+    if (!isThinking && !isListening) return null;
+
+    return (
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-3 pointer-events-none">
+            {/* Voice Status Indicator */}
+            {isListening && !isThinking && (
+                <div className="bg-red-900/80 border border-red-500 text-red-100 px-4 py-2 rounded-full shadow-lg backdrop-blur flex items-center gap-2 animate-pulse">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                    <span className="text-xs font-bold tracking-wider">LISTENING</span>
+                </div>
+            )}
+
+            {/* Thinking Status Indicator */}
+            {isThinking && (
+                <div className="bg-cyan-900/80 border border-cyan-400 text-cyan-100 px-4 py-2 rounded-full shadow-lg backdrop-blur flex items-center gap-2 animate-pulse">
+                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+                    <span className="text-xs font-bold tracking-wider">THINKING...</span>
+                </div>
+            )}
+            <div className={`p-3 rounded-full border border-white/10 backdrop-blur transition-all duration-500 ${isThinking ? 'bg-cyan-600/50 shadow-[0_0_20px_cyan]' : isListening ? 'bg-red-600/50 shadow-[0_0_20px_red]' : 'bg-black/50'}`}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`text-white transition-opacity ${isThinking || isListening ? 'opacity-100' : 'opacity-50'}`}>
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </div>
+        </div>
+    );
 });
 
 export default VoiceController;

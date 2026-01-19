@@ -8,5 +8,24 @@ export default defineConfig({
     host: true, // Listen on all local IPs
     port: 5173,
     strictPort: true, // Fail if port is in use
+  },
+  build: {
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
+          // opencv is external/worker, likely not bundled here, but good to separate if imported
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
   }
 })

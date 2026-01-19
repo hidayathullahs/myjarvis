@@ -24,7 +24,9 @@ export default {
             animation: {
                 'spin-slow': 'spin 12s linear infinite',
                 'spin-reverse': 'spin-reverse 15s linear infinite',
-                'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite', // Calm / Confidence
+                'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',      // Standard
+                'pulse-fast': 'pulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite', // Warning / Alert
                 'scan': 'scan 4s linear infinite',
                 'flash': 'flash 0.5s ease-in-out',
                 'glitch': 'glitch 1s linear infinite',
